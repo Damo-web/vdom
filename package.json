@@ -1,0 +1,15 @@
+{
+  "name": "vdom",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/Damo-web/vdom.git",
+  "author": "snowball <snowballer0705@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "serve": "parcel public/index.html && parcel watch public/index.html",
+    "build": "parcel public/index.html"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.10.3"
+  }
+}
