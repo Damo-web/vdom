@@ -12,15 +12,23 @@ function addNS(data, children, sel) {
 }
 
 module.exports = function h(sel, b, c) {
-  var data = {}, children, text, i;
+  var data = {},
+    children, text, i;
   if (c !== undefined) {
     data = b;
-    if (is.array(c)) { children = c; }
-    else if (is.primitive(c)) { text = c; }
+    if (is.array(c)) {
+      children = c;
+    } else if (is.primitive(c)) {
+      text = c;
+    }
   } else if (b !== undefined) {
-    if (is.array(b)) { children = b; }
-    else if (is.primitive(b)) { text = b; }
-    else { data = b; }
+    if (is.array(b)) {
+      children = b;
+    } else if (is.primitive(b)) {
+      text = b;
+    } else {
+      data = b;
+    }
   }
   if (is.array(children)) {
     for (i = 0; i < children.length; ++i) {
