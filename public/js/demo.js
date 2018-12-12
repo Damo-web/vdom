@@ -112,6 +112,7 @@
 
 
 import createVNode from "./vdom/creator";
+import domApi from "./vdom/domapi";
 
 const vnode = createVNode('div', {
   key: 1
@@ -135,4 +136,4 @@ console.log(createVNode('div', {
   })
 ]));
 
-console.log(vnode, 23333);
+console.log(domApi, 23333);

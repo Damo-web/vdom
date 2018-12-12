@@ -51,14 +51,14 @@ const createVNode = (selector, b, c) => {
   /**
    * isDef(b)           
    * example:  
-   *   createVNode('div',{style:{color: red}},[createVNode('div', 'demo')]) 
-   *   createVNode('div',{key: 2}},'this is example') 
+   *   createVNode('div',{style:{'color': 'red'}},[createVNode('div', 'demo')]) 
+   *   createVNode('div',{'key': 2},'this is example') 
    *    
    * isDef(b) && isUndef(c)             
    * example:  
    *   createVNode('div',[createVNode('div', 'demo')]) 
    *   createVNode('div','this is example') 
-   *   createVNode('div',{key: 2}}) 
+   *   createVNode('div',{'key': 2}}) 
    * 
    * isUndef(c) && isUndef(b) 
    * example:  
