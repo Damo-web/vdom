@@ -1,3 +1,4 @@
+
 function createElement(tagName){
   return document.createElement(tagName);
 }
@@ -8,6 +9,10 @@ function createElementNS(namespaceURI, qualifiedName){
 
 function createTextNode(text){
   return document.createTextNode(text);
+}
+
+function createComment(text) {
+  return document.createComment(text);
 }
 
 function insertBefore(parentNode, newNode, referenceNode){
@@ -23,32 +28,53 @@ function appendChild(node, child){
 }
 
 function parentNode(node){
-  return node.parentElement;
+  return node.parentNode;
 }
 
 function nextSibling(node){
   return node.nextSibling;
 }
 
-function tagName(node){
-  return node.tagName;
+function tagName(elm){
+  return elm.tagName;
 }
 
 function setTextContent(node, text){
   node.textContent = text;
 }
 
-const domApi = {
+function getTextContent(node) {
+  return node.textContent;
+}
+
+function isElement(node) {
+  return node.nodeType === 1;
+}
+
+function isText(node) {
+  return node.nodeType === 3;
+}
+
+function isComment(node) {
+  return node.nodeType === 8;
+}
+
+const DOMAPI = {
   createElement,
   createElementNS,
   createTextNode,
+  createComment,
   appendChild,
   removeChild,
   insertBefore,
   parentNode,
   nextSibling,
   tagName,
-  setTextContent
+  setTextContent,
+  getTextContent,
+  isElement,
+  isText,
+  isComment
 }
 
-export default domApi;
+export default DOMAPI;

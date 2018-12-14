@@ -13,9 +13,12 @@ import Validator from "./validator";
  */
 const addNameSpace = (data, children, selector) => {
   data.namespace = 'http://www.w3.org/2000/svg';
-  if (selector !== 'foreignObject' && children !== undefined) {
+  if (selector !== 'foreignObject' && Validator.isDef(children)) {
     for (let i = 0; i < children.length; ++i) {
-      addNameSpace(children[i].data, children[i].children, children[i].selector);
+      let childData = children[i].data;
+      if(Validator.isDef(childData)){
+        addNameSpace(childData, children[i].children, children[i].selector);
+      }
     }
   }
 }
@@ -69,29 +72,33 @@ const createVNode = (selector, b, c) => {
     data = b;
     if (Validator.isArray(c)) {
       children = c;
-    }
-    if (Validator.isStrOrNum(c)) {
+    }else if (Validator.isStrOrNum(c)) {
       text = c;
+    }else if( c && c.selector ){
+      children = [c];
     }
   } else if (Validator.isDef(b)) {
     if (Validator.isArray(b)) {
       children = b;
     } else if (Validator.isStrOrNum(b)) {
       text = b;
+    } else if( b && b.selector ){
+      children = [b];
     } else {
       data = b;
     }
   }
 
-  if (Validator.isArray(children)) {
+  if (Validator.isDef(children)) {
     for (let i = 0; i < children.length; ++i) {
       if (Validator.isStrOrNum(children[i])){
-        children[i] = VNode(undefined, undefined, undefined, children[i])
+        children[i] = VNode(undefined, undefined, undefined, children[i], undefined)
       }
     }
   }
   
-  if (selector[0] === 's' && selector[1] === 'v' && selector[2] === 'g') {
+  if (selector[0] === 's' && selector[1] === 'v' && selector[2] === 'g' &&
+  (selector === 3 || selector[3] === '.' || selector[3] === '#')) {
     addNameSpace(data, children, selector);
   }
 

@@ -13,8 +13,8 @@ const VNode = (selector, data, children, text, elm) => {
     selector,
     data,
     children,
-    text,
     elm,
+    text,
     key
   }
 }
