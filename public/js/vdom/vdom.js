@@ -89,47 +89,113 @@ function init(modules, api){
   }
 
   function createElm(vnode, insertedVnodeQueue) {
-    let { data } = vnode;
+    let i;
+    let data = vnode.data,
+    children = vnode.children, 
+    selector = vnode.selector;
        
+    //判断是否为init 
+    //若为init，则调用init hook
     if (Validator.isDef(data)) {
       if (Validator.isDef(i = data.hook) && Validator.isDef(i = i.init)) {
         i(vnode);
         data = vnode.data;
       }
     }
-    var elm, children = vnode.children, sel = vnode.sel;
-    if (Validator.isDef(sel)) {
-      // Parse selector
-      var hashIdx = sel.indexOf('#');
-      var dotIdx = sel.indexOf('.', hashIdx);
-      var hash = hashIdx > 0 ? hashIdx : sel.length;
-      var dot = dotIdx > 0 ? dotIdx : sel.length;
-      var tag = hashIdx !== -1 || dotIdx !== -1 ? sel.slice(0, Math.min(hash, dot)) : sel;
-      elm = vnode.elm = isDef(data) && isDef(i = data.ns) ? api.createElementNS(i, tag)
-                                                          : api.createElement(tag);
-      if (hash < dot) elm.id = sel.slice(hash + 1, dot);
-      if (dotIdx > 0) elm.className = sel.slice(dot + 1).replace(/\./g, ' ');
-      if (is.array(children)) {
+
+    //判断是否为Comment
+    if (selector === '!') {
+      if (Validator.isUndef(vnode.text)) {
+        vnode.text = '';
+      }
+      vnode.elm = api.createComment(vnode.text);
+    } else if (Validator.isDef(selector)) {
+      //解析selector
+      const hashIdx = selector.indexOf('#');
+      const dotIdx = selector.indexOf('.', hashIdx);
+      const hash = hashIdx > 0 ? hashIdx : selector.length;
+      const dot = dotIdx > 0 ? dotIdx : selector.length;
+      const tag = hashIdx !== -1 || dotIdx !== -1 ? selector.slice(0, Math.min(hash, dot)) : selector;
+      //创建tag标签
+      const elm = vnode.elm = Validator.isDef(data) && Validator.isDef(i = data.namespace) ? api.createElementNS(i, tag): api.createElement(tag);
+      //设置tag id属性
+      if (hash < dot){
+        elm.setAttribute('id', sel.slice(hash + 1, dot));
+      } 
+      //设置tag class属性
+      if (dotIdx > 0){
+        elm.setAttribute('class', sel.slice(dot + 1).replace(/\./g, ' '));
+      } 
+      //插入 create hook
+      for (i = 0; i < cbs.create.length; ++i){
+        cbs.create[i](emptyNode, vnode);
+      }
+      //针对children和text区别添加
+      if (Validator.isArray(children)) {
         for (i = 0; i < children.length; ++i) {
-          api.appendChild(elm, createElm(children[i], insertedVnodeQueue));
+          const ch = children[i];
+          if (ch != null) {
+            api.appendChild(elm, createElm(ch, insertedVnodeQueue));
+          }
         }
-      } else if (is.primitive(vnode.text)) {
+      } else if (Validator.isStrOrNum(vnode.text)) {
         api.appendChild(elm, api.createTextNode(vnode.text));
       }
-      for (let i = 0; i = 0; i < cbs.create.length; ++i) cbs.create[i](emptyNode, vnode);
+
       i = vnode.data.hook; // Reuse variable
-      if (isDef(i)) {
-        if (i.create) i.create(emptyNode, vnode);
-        if (i.insert) insertedVnodeQueue.push(vnode);
+
+      //判断hook是否存在
+      //若存在则调用create hook
+      //若insert hook存在，则存入insertedVnodeQueue 队列
+      if (Validator.isDef(i)) {
+        if (i.create){
+          i.create(emptyNode, vnode);
+        }
+        if (i.insert) {
+          insertedVnodeQueue.push(vnode);
+        }
       }
-    } else {
-      elm = vnode.elm = api.createTextNode(vnode.text);
     }
+
     return vnode.elm;
   }
 
   return function patch(oldVnode,vnode){
-    
+    let elm = null;
+    let parent = null;
+    let insertedVnodeQueue = [];
+
+    for (let i = 0; i < cbs.pre.length; ++i) {
+      cbs.pre[i]();
+    }
+
+    //初始化时无oldVnode
+    if(!isVnode(oldVnode)){
+      oldVnode = emptyNode(oldVnode);
+    }
+
+    //对比新旧节点
+    if(sameVnode(oldVnode, vnode)){
+      patchVnode(oldVnode, vnode, insertedVnodeQueue);
+    }else{
+      elm = oldVnode.elm;
+      parent = api.parentNode(elm);
+      createElm(vnode, insertedVnodeQueue);
+      if (parent !== null) {
+        api.insertBefore(parent, vnode.elm, api.nextSibling(elm));
+        removeVnodes(parent, [oldVnode], 0, 0);
+      }
+    }
+
+    for (let i = 0; i < insertedVnodeQueue.length; ++i) {
+      insertedVnodeQueue[i].data.hook.insert(insertedVnodeQueue[i]);
+    }
+
+    for (let i = 0; i < cbs.post.length; ++i) {
+      cbs.post[i]();
+    }
+
+    return vnode;
   }
 
 }
