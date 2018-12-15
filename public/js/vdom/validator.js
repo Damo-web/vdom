@@ -16,6 +16,9 @@ const Validator = {
   },
   isStrOrNum: (val) => {
     return typeof val === 'string' || typeof val === 'number';
+  },
+  isStr: (val)=>{
+    return typeof val !== "string"
   }
 }
 

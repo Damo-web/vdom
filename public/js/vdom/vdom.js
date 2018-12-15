@@ -37,10 +37,7 @@ function isVnode(vnode) {
  * @param {*} endIdx 
  */
 function createKeyToOldIdx(children, beginIdx, endIdx) {
-  let i = 0;
-  let map = {};
-  let key = undefined;
-  let ch = null;
+  let i, map = {}, key, ch;
   
   for (i = beginIdx; i <= endIdx; ++i) {
     ch = children[i];
@@ -73,21 +70,14 @@ function init(modules, api){
     }
   }
 
+  //生成空节点
   function emptyNodeAt(elm) {
     const elmId = elm.id ? `#${elm.id}` : '';
     const elmClass = elm.className ? `.${elm.className.split(' ').join('.')}` : '';
     return VNode(api.tagName(elm).toLowerCase() + elmId + elmClass, {}, [], undefined, elm);
   }
 
-  function createRmCb(childElm, listeners) {
-    return function rmCb(){
-      if (--listeners === 0) {
-        const parent = api.parentNode(childElm);
-        api.removeChild(parent, childElm);
-      }
-    }
-  }
-
+  //生成 brower DOM
   function createElm(vnode, insertedVnodeQueue) {
     let i;
     let data = vnode.data,
@@ -159,10 +149,216 @@ function init(modules, api){
 
     return vnode.elm;
   }
+  
+  //添加节点
+  function addVnodes(parentElm, before, vnodes, startIdx, endIdx, insertedVnodeQueue) {
+    for (n = startIdx; n <= endIdx; ++n) {
+      api.insertBefore(parentElm, createElm(vnodes[n], insertedVnodeQueue), before);
+    }
+  }
+
+  //删除节点
+  function removeVnodes(parentElm,vnodes,startIdx,endIdx){
+    for (n = startIdx; n <= endIdx; ++n) {
+      let i, listeners, rm, ch = vnodes[n];
+      //节点存在
+      if (ch != null) {
+        if (Validator.isDef(ch.selector)) {
+          //销毁destory hook
+          invokeDestroyHook(ch);
+
+          //移除子元素辅助函数
+          listeners = cbs.remove.length + 1;
+          rm = createRmCb(ch.elm, listeners);
+
+          //销毁该节点所有modules的remove hooks
+          for (i = 0; i < cbs.remove.length; ++i){
+            cbs.remove[i](ch, rm);
+          } 
+
+          //若data.hook.remove存在，则执行remove hook
+          //否则移除子元素
+          if (Validator.isDef(i = ch.data) && Validator.isDef(i = i.hook) && Validator.isDef(i = i.remove)) {
+            i(ch, rm);
+          } else {
+            rm();
+          }
+        } else { 
+          // Text node
+          api.removeChild(parentElm, ch.elm);
+        }
+      }
+    }
+  }
+
+  //触发destory hook
+  function invokeDestroyHook(vnode) {
+    let i, j;
+    let data = vnode.data,ch = vnode.children;
+
+    if (Validator.isDef(data)) {
+      //若hook.destory存在，则执行destory hook
+      if (Validator.isDef(i = data.hook) && Validator.isDef(i = i.destroy)){
+        i(vnode);
+      } 
+      //销毁该节点所有modules的destory hooks
+      for (i = 0; i < cbs.destroy.length; ++i){
+        cbs.destroy[i](vnode);
+      } 
+      //递归销毁子组件destory hooks
+      if (Validator.isDef(ch)) {
+        for (j = 0; j < ch.length; ++j) {
+          i = ch[j];
+          if (i != null && Validator.isStr(i)) {
+            invokeDestroyHook(i);
+          }
+        }
+      }
+    }
+  }
+
+  //移除子元素
+  function createRmCb(childElm, listeners) {
+    return function rmCb(){
+      if (--listeners === 0) {
+        const parent = api.parentNode(childElm);
+        api.removeChild(parent, childElm);
+      }
+    }
+  }
+
+  //patch node
+  function patchVnode(oldVnode, vnode, insertedVnodeQueue) {
+    let i, hook;
+    const elm = vnode.elm = oldVnode.elm;
+    let oldCh = oldVnode.children,ch = vnode.children;
+
+    //若data.hook.prepatch存在，则执行prepatch hook
+    if (Validator.isDef(i = vnode.data) && Validator.isDef(hook = i.hook) && Validator.isDef(i = hook.prepatch)) {
+      i(oldVnode, vnode);
+    }
+    
+    //新旧节点完全相同
+    if (oldVnode === vnode) {
+      return
+    };
+    
+    //触发update hook
+    if (Validator.isDef(vnode.data)) {
+      for (i = 0; i < cbs.update.length; ++i){
+        cbs.update[i](oldVnode, vnode);
+      }
+      i = vnode.data;
+      if (Validator.isDef(i = i.hook) && Validator.isDef(i = i.update)){
+        i(oldVnode, vnode);
+      }
+    }
+
+    if (Validator.isUndef(vnode.text)) {
+      //新节点非文本节点
+      if (Validator.isDef(oldCh) && Validator.isDef(ch)) {
+        //新旧节点都含有子元素
+        //则更新子元素
+        if (oldCh !== ch) {
+          updateChildren(elm, oldCh, ch, insertedVnodeQueue);
+        }
+      } else if (Validator.isDef(ch)) {
+        //新节点有子元素，旧节点无子元素
+        if (Validator.isDef(oldVnode.text)){
+          api.setTextContent(elm, '');
+        } 
+        addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue);
+      } else if (Validator.isDef(oldCh)) {
+        //新节点无子元素，旧节点有子元素
+        removeVnodes(elm, oldCh, 0, oldCh.length - 1);
+      } else if (Validator.isDef(oldVnode.text)) {
+        //旧节点为文本节点
+        api.setTextContent(elm, '');
+      }
+    } else if (oldVnode.text !== vnode.text) {
+      //新节点为文本节点
+      if (Validator.isDef(oldCh)) {
+        removeVnodes(elm, oldCh, 0, oldCh.length - 1);
+      }
+      api.setTextContent(elm, vnode.text);
+    }
+
+    //若data.hook.postpatch存在，则执行postpatch hook
+    if (Validator.isDef(hook) && isDef(i = hook.postpatch)) {
+      i(oldVnode, vnode);
+    }
+  }
+
+  function updateChildren(parentElm, oldCh, newCh, insertedVnodeQueue) {
+    let oldStartIdx = 0, newStartIdx = 0;
+    let oldEndIdx = oldCh.length - 1;
+    let oldStartVnode = oldCh[0];
+    let oldEndVnode = oldCh[oldEndIdx];
+    let newEndIdx = newCh.length - 1;
+    let newStartVnode = newCh[0];
+    let newEndVnode = newCh[newEndIdx];
+    let oldKeyToIdx,idxInOld,elmToMove,before;
+
+    while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+      if (oldStartVnode == null) {
+        oldStartVnode = oldCh[++oldStartIdx]; // Vnode might have been moved left
+      } else if (oldEndVnode == null) {
+        oldEndVnode = oldCh[--oldEndIdx];
+      } else if (newStartVnode == null) {
+        newStartVnode = newCh[++newStartIdx];
+      } else if (newEndVnode == null) {
+        newEndVnode = newCh[--newEndIdx];
+      } else if (sameVnode(oldStartVnode, newStartVnode)) {
+        patchVnode(oldStartVnode, newStartVnode, insertedVnodeQueue);
+        oldStartVnode = oldCh[++oldStartIdx];
+        newStartVnode = newCh[++newStartIdx];
+      } else if (sameVnode(oldEndVnode, newEndVnode)) {
+        patchVnode(oldEndVnode, newEndVnode, insertedVnodeQueue);
+        oldEndVnode = oldCh[--oldEndIdx];
+        newEndVnode = newCh[--newEndIdx];
+      } else if (sameVnode(oldStartVnode, newEndVnode)) { // Vnode moved right
+        patchVnode(oldStartVnode, newEndVnode, insertedVnodeQueue);
+        api.insertBefore(parentElm, oldStartVnode.elm, api.nextSibling(oldEndVnode.elm));
+        oldStartVnode = oldCh[++oldStartIdx];
+        newEndVnode = newCh[--newEndIdx];
+      } else if (sameVnode(oldEndVnode, newStartVnode)) { // Vnode moved left
+        patchVnode(oldEndVnode, newStartVnode, insertedVnodeQueue);
+        api.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm);
+        oldEndVnode = oldCh[--oldEndIdx];
+        newStartVnode = newCh[++newStartIdx];
+      } else {
+        if (Validator.isUndef(oldKeyToIdx)) {
+          oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx);
+        }
+        idxInOld = oldKeyToIdx[newStartVnode.key];
+        if (Validator.isUndef(idxInOld)) { // New element
+          api.insertBefore(parentElm, createElm(newStartVnode, insertedVnodeQueue), oldStartVnode.elm);
+          newStartVnode = newCh[++newStartIdx];
+        } else {
+          elmToMove = oldCh[idxInOld];
+          if (elmToMove.sel !== newStartVnode.sel) {
+            api.insertBefore(parentElm, createElm(newStartVnode, insertedVnodeQueue), oldStartVnode.elm);
+          } else {
+            patchVnode(elmToMove, newStartVnode, insertedVnodeQueue);
+            oldCh[idxInOld] = undefined;
+            api.insertBefore(parentElm, (elmToMove.elm), oldStartVnode.elm);
+          }
+          newStartVnode = newCh[++newStartIdx];
+        }
+      }
+    }
+    if (oldStartIdx <= oldEndIdx || newStartIdx <= newEndIdx) {
+      if (oldStartIdx > oldEndIdx) {
+        before = newCh[newEndIdx+1] == null ? null : newCh[newEndIdx+1].elm;
+        addVnodes(parentElm, before, newCh, newStartIdx, newEndIdx, insertedVnodeQueue);
+      } else {
+        removeVnodes(parentElm, oldCh, oldStartIdx, oldEndIdx);
+      }
+    }
+  }
 
   return function patch(oldVnode,vnode){
-    let elm = null;
-    let parent = null;
+    let elm,parent;
     let insertedVnodeQueue = [];
 
     for (let i = 0; i < cbs.pre.length; ++i) {
@@ -170,17 +366,26 @@ function init(modules, api){
     }
 
     //初始化时无oldVnode
+    //oldVnode即为空节点
     if(!isVnode(oldVnode)){
-      oldVnode = emptyNode(oldVnode);
+      oldVnode = emptyNodeAt(oldVnode);
     }
 
     //对比新旧节点
     if(sameVnode(oldVnode, vnode)){
+      //非初始化
       patchVnode(oldVnode, vnode, insertedVnodeQueue);
     }else{
+      //初始化及新旧节点diff
+
+      //获取新旧节点及父级
       elm = oldVnode.elm;
       parent = api.parentNode(elm);
       createElm(vnode, insertedVnodeQueue);
+
+      //倘若父级节点存在
+      //在父级节点下旧节点后插入新节点
+      //删除旧节点
       if (parent !== null) {
         api.insertBefore(parent, vnode.elm, api.nextSibling(elm));
         removeVnodes(parent, [oldVnode], 0, 0);
