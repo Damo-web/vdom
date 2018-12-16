@@ -362,7 +362,7 @@ function init(modules, api){
             //若selector不同，则新建dom
             api.insertBefore(parentElm, createElm(newStartVnode, insertedVnodeQueue), oldStartVnode.elm);
           } else {
-            //若selector相同
+            //若selector相同,key也相同
             patchVnode(elmToMove, newStartVnode, insertedVnodeQueue);
             oldCh[idxInOld] = undefined;
             api.insertBefore(parentElm, elmToMove.elm, oldStartVnode.elm);
@@ -371,11 +371,15 @@ function init(modules, api){
         }
       }
     }
+
+    //处理异常情况
     if (oldStartIdx <= oldEndIdx || newStartIdx <= newEndIdx) {
       if (oldStartIdx > oldEndIdx) {
+        //追加newCh
         before = newCh[newEndIdx+1] == null ? null : newCh[newEndIdx+1].elm;
         addVnodes(parentElm, before, newCh, newStartIdx, newEndIdx, insertedVnodeQueue);
       } else {
+        //删除oldCh
         removeVnodes(parentElm, oldCh, oldStartIdx, oldEndIdx);
       }
     }
