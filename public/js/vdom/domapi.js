@@ -1,4 +1,6 @@
-
+/**
+ * DOM API
+ */
 function createElement(tagName){
   return document.createElement(tagName);
 }

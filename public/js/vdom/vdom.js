@@ -43,7 +43,7 @@ function createKeyToOldIdx(children, beginIdx, endIdx) {
     ch = children[i];
     if (ch != null) {
       key = ch.key;
-      if (key !== undefined) {
+      if (Validator.isDef(key)) {
         map[key] = i;
       }
     }
@@ -290,25 +290,32 @@ function init(modules, api){
   }
 
   function updateChildren(parentElm, oldCh, newCh, insertedVnodeQueue) {
-    let oldStartIdx = 0, newStartIdx = 0;
-    let oldEndIdx = oldCh.length - 1;
-    let oldStartVnode = oldCh[0];
-    let oldEndVnode = oldCh[oldEndIdx];
-    let newEndIdx = newCh.length - 1;
-    let newStartVnode = newCh[0];
-    let newEndVnode = newCh[newEndIdx];
+    //获取 oldCh, newCh 首尾index
+    let oldStartIdx = 0,oldEndIdx = oldCh.length - 1;
+    let newStartIdx = 0,newEndIdx = newCh.length - 1;
+
+    //获取 oldCh, newCh 首尾node
+    let oldStartVnode = oldCh[0],oldEndVnode = oldCh[oldEndIdx];
+    let newStartVnode = newCh[0],newEndVnode = newCh[newEndIdx];
+
     let oldKeyToIdx,idxInOld,elmToMove,before;
 
     while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+      //确保oldStartVnode,oldEndVnode,newStartVnode,newEndVnode存在
       if (oldStartVnode == null) {
-        oldStartVnode = oldCh[++oldStartIdx]; // Vnode might have been moved left
+        // Vnode might have been moved
+        oldStartVnode = oldCh[++oldStartIdx]; 
       } else if (oldEndVnode == null) {
         oldEndVnode = oldCh[--oldEndIdx];
       } else if (newStartVnode == null) {
         newStartVnode = newCh[++newStartIdx];
       } else if (newEndVnode == null) {
         newEndVnode = newCh[--newEndIdx];
-      } else if (sameVnode(oldStartVnode, newStartVnode)) {
+      } 
+      //当oldStartVnode与newStartVnode属于同一节点
+      //或者oldEndVnode与newEndVnode属于同一节点
+      //不进行DOM操作
+      else if (sameVnode(oldStartVnode, newStartVnode)) {
         patchVnode(oldStartVnode, newStartVnode, insertedVnodeQueue);
         oldStartVnode = oldCh[++oldStartIdx];
         newStartVnode = newCh[++newStartIdx];
@@ -316,32 +323,49 @@ function init(modules, api){
         patchVnode(oldEndVnode, newEndVnode, insertedVnodeQueue);
         oldEndVnode = oldCh[--oldEndIdx];
         newEndVnode = newCh[--newEndIdx];
-      } else if (sameVnode(oldStartVnode, newEndVnode)) { // Vnode moved right
+      } 
+      //当oldStartVnode与newEndVnode属于同一节点
+      //Vnode 往右偏移
+      else if (sameVnode(oldStartVnode, newEndVnode)) { 
         patchVnode(oldStartVnode, newEndVnode, insertedVnodeQueue);
         api.insertBefore(parentElm, oldStartVnode.elm, api.nextSibling(oldEndVnode.elm));
         oldStartVnode = oldCh[++oldStartIdx];
         newEndVnode = newCh[--newEndIdx];
-      } else if (sameVnode(oldEndVnode, newStartVnode)) { // Vnode moved left
+      } 
+      //当oldEndVnode与newStartVnode属于同一节点
+      //Vnode 往左偏移
+      else if (sameVnode(oldEndVnode, newStartVnode)) { 
         patchVnode(oldEndVnode, newStartVnode, insertedVnodeQueue);
         api.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm);
         oldEndVnode = oldCh[--oldEndIdx];
         newStartVnode = newCh[++newStartIdx];
-      } else {
+      } 
+      //当oldStartVnode,oldEndVnode,newStartVnode,newEndVnode都是不同的节点
+      else {
+        //oldKeyToIdx不存在，则oldCh追加key
         if (Validator.isUndef(oldKeyToIdx)) {
           oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx);
         }
+        //通过newStartVnode的key去获取idxInOld
         idxInOld = oldKeyToIdx[newStartVnode.key];
-        if (Validator.isUndef(idxInOld)) { // New element
+        //判断idxInOld是否存在
+        if (Validator.isUndef(idxInOld)) { 
+          //若idxInOld不存在，则为新元素
+          //创建新元素，并插入到旧节点之前
           api.insertBefore(parentElm, createElm(newStartVnode, insertedVnodeQueue), oldStartVnode.elm);
           newStartVnode = newCh[++newStartIdx];
         } else {
+          //若idxInOld存在，则oldCh有相同 key 的 vnode
           elmToMove = oldCh[idxInOld];
-          if (elmToMove.sel !== newStartVnode.sel) {
+          //判断新旧node selector是否相同
+          if (elmToMove.selector !== newStartVnode.selector) {
+            //若selector不同，则新建dom
             api.insertBefore(parentElm, createElm(newStartVnode, insertedVnodeQueue), oldStartVnode.elm);
           } else {
+            //若selector相同
             patchVnode(elmToMove, newStartVnode, insertedVnodeQueue);
             oldCh[idxInOld] = undefined;
-            api.insertBefore(parentElm, (elmToMove.elm), oldStartVnode.elm);
+            api.insertBefore(parentElm, elmToMove.elm, oldStartVnode.elm);
           }
           newStartVnode = newCh[++newStartIdx];
         }
@@ -406,3 +430,6 @@ function init(modules, api){
 }
 
 
+export default {
+  init
+}
