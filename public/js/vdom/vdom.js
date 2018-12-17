@@ -51,6 +51,11 @@ function createKeyToOldIdx(children, beginIdx, endIdx) {
   return map;
 }
 
+/**
+ * vdom init 
+ * @param {Array} modules 
+ * @param {Object} api 
+ */
 function init(modules, api){
   //初始化回调函数，来存储modules的hooks
   let cbs = {};
@@ -433,7 +438,7 @@ function init(modules, api){
 
 }
 
-
+//导出init
 export default {
   init
 }
