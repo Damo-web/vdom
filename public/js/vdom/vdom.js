@@ -60,6 +60,8 @@ function init(modules, api){
   //初始化回调函数，来存储modules的hooks
   let cbs = {};
 
+  let n;
+
   //默认使用DOMAPI
   if(Validator.isUndef(api)){
     api = DOMAPI;

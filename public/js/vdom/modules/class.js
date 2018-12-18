@@ -22,11 +22,10 @@ function updateClass(oldVnode, vnode) {
     }
   }
 
-  //new class中class 与 old class中class 值相同时不做变化
+  //new class中class 与 old class中class 值相同时不做更新
   //new class中class 与 old class中class 值不同时
   //new class中class为true，则class添加
   //new class中class为false，则class移除
-
   for (name in newClass) {
     cur = newClass[name];
     if (cur !== oldClass[name]) {

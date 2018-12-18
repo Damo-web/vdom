@@ -48,8 +48,7 @@ const addNameSpace = (data, children, selector) => {
 
 const createVNode = (selector, b, c) => {
   let data = {};
-  let children = undefined;
-  let text = undefined;
+  let children,text;
 
   /**
    * isDef(b)           
