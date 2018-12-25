@@ -9,8 +9,7 @@ import AttributeModule from "./vdom/modules/attribute";
 import DatasetModule from "./vdom/modules/dataset";
 import PropModule from "./vdom/modules/prop";
 
-
-import createVNode from "./vdom/creator";
+import h from "./vdom/creator";
 
 
 let vnode;
@@ -24,7 +23,7 @@ const patch = vdom.init([
   PropModule
 ])
 
-let newVnode = createVNode('div',{
+let newVnode = h('div',{
   class:{
     active: true
   },
@@ -38,38 +37,43 @@ let newVnode = createVNode('div',{
   dataset:{
     action: 'reset'
   },
+  key: 1,
   // props: {
   //   contenteditable: true
   // },
   on:{
     'click':()=>{
-      patch(newVnode,Vnode);
+      vnode = patch(newVnode,Vnode);
     }
   }
 },'This is demo!');
 
-// let newVnode = createVNode('a',{
-//   props: {href: 'http://www.baidu.com'}
-// },'This is demo!');
+let oldVnode = h('a',{
+  on:{
+    'click':()=>{
+      vnode = patch(vnode, newVnode);   
+    }
+  }
+},'This is demo!');
 
 
-let Vnode = createVNode('div',{
+let Vnode = h('div',{
   class:{
     active: true
   },
 },[
-  createVNode('div',{
+  h('div',{
     class:{
       active: true
     },
+    key: 3,
     on:{
       'click':()=>{
-        let container = document.querySelector('.container');
-        patch(container, newVnode);
+        vnode = patch(vnode, newVnode);   
       }
     }
   },"this is demo1"),
-  createVNode('div',{
+  h('div',{
     class:{
       active: true
     },
@@ -77,8 +81,10 @@ let Vnode = createVNode('div',{
 ]);
 
 window.addEventListener('DOMContentLoaded', () => {
-  let container = document.getElementById('container');
+  const app = document.getElementById('app');
+  const container = document.createElement('div');
   vnode = patch(container, newVnode);
+  app.append(vnode.elm);
 });
 
 

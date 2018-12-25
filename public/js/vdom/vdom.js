@@ -400,6 +400,8 @@ function init(modules, api){
       cbs.pre[i]();
     }
 
+    console.log(oldVnode,vnode);
+
     //初始化时无oldVnode
     //oldVnode即为空节点
     if(!isVnode(oldVnode)){
@@ -408,6 +410,7 @@ function init(modules, api){
 
     //对比新旧节点
     if(sameVnode(oldVnode, vnode)){
+      console.log("sameVnode");
       //非初始化
       patchVnode(oldVnode, vnode, insertedVnodeQueue);
     }else{
@@ -417,6 +420,8 @@ function init(modules, api){
       elm = oldVnode.elm;
       parent = api.parentNode(elm);
       createElm(vnode, insertedVnodeQueue);
+
+
 
       //倘若父级节点存在
       //在父级节点下旧节点后插入新节点
