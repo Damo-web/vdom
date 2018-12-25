@@ -1,5 +1,5 @@
 /**
- * Class Modules
+ * Class Module
  */
 function updateClass(oldVnode, vnode) {
   let cur, name;
@@ -34,4 +34,7 @@ function updateClass(oldVnode, vnode) {
   }
 }
 
-export default {create: updateClass, update: updateClass};
+export default {
+  create: updateClass, 
+  update: updateClass
+};
