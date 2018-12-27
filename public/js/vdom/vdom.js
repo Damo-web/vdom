@@ -15,11 +15,11 @@ const hooks = ['create', 'update', 'remove', 'destroy', 'pre', 'post'];
 
 /**
  * sameVnode---------------对比两节点是否相同
- * @param {*} vnode1 
- * @param {*} vnode2 
+ * @param {*} a 
+ * @param {*} b 
  */
-function sameVnode(vnode1, vnode2) {
-  return vnode1.key === vnode2.key && vnode1.selector === vnode2.selector;
+function sameVnode(a, b) {
+  return a.key === b.key && a.selector === b.selector;
 }
 
 /**
@@ -117,11 +117,11 @@ function init(modules, api){
       const elm = vnode.elm = Validator.isDef(data) && Validator.isDef(i = data.namespace) ? api.createElementNS(i, tag): api.createElement(tag);
       //设置tag id属性
       if (hash < dot){
-        elm.setAttribute('id', sel.slice(hash + 1, dot));
+        elm.setAttribute('id', selector.slice(hash + 1, dot));
       } 
       //设置tag class属性
       if (dotIdx > 0){
-        elm.setAttribute('class', sel.slice(dot + 1).replace(/\./g, ' '));
+        elm.setAttribute('class', selector.slice(dot + 1).replace(/\./g, ' '));
       } 
       //插入 create hook
       for (i = 0; i < cbs.create.length; ++i){
@@ -400,8 +400,6 @@ function init(modules, api){
       cbs.pre[i]();
     }
 
-    console.log(oldVnode,vnode);
-
     //初始化时无oldVnode
     //oldVnode即为空节点
     if(!isVnode(oldVnode)){
@@ -410,8 +408,6 @@ function init(modules, api){
 
     //对比新旧节点
     if(sameVnode(oldVnode, vnode)){
-      console.log("sameVnode");
-      //非初始化
       patchVnode(oldVnode, vnode, insertedVnodeQueue);
     }else{
       //初始化及新旧节点diff
@@ -420,7 +416,6 @@ function init(modules, api){
       elm = oldVnode.elm;
       parent = api.parentNode(elm);
       createElm(vnode, insertedVnodeQueue);
-
 
 
       //倘若父级节点存在

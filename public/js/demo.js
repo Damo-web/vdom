@@ -11,8 +11,9 @@ import PropModule from "./vdom/modules/prop";
 
 import h from "./vdom/creator";
 
-
 let vnode;
+
+let tmp = false;
 
 const patch = vdom.init([
   ClassModule,
@@ -23,9 +24,9 @@ const patch = vdom.init([
   PropModule
 ])
 
-let newVnode = h('div',{
+let oldVnode = h('div',{
   class:{
-    active: true
+    warn: true
   },
   style:{
     'font-size': "18px",
@@ -37,53 +38,69 @@ let newVnode = h('div',{
   dataset:{
     action: 'reset'
   },
-  key: 1,
+  // key: 1,
   // props: {
   //   contenteditable: true
   // },
   on:{
-    'click':()=>{
-      vnode = patch(newVnode,Vnode);
+    click: function handler1(e){
+      console.log('test 1',e.target);
+      vnode = patch(vnode,newVnode);
     }
   }
 },'This is demo!');
 
-let oldVnode = h('a',{
-  on:{
-    'click':()=>{
-      vnode = patch(vnode, newVnode);   
-    }
-  }
-},'This is demo!');
+// let oldVnode = h('a',{
+//   on:{
+//     'click':()=>{
+//       vnode = patch(vnode, newVnode);   
+//     }
+//   }
+// },'This is demo!');
 
 
-let Vnode = h('div',{
+let newVnode = h('div',{
   class:{
     active: true
   },
+  key: 3,
 },[
   h('div',{
     class:{
-      active: true
+      warn: true
     },
-    key: 3,
     on:{
-      'click':()=>{
-        vnode = patch(vnode, newVnode);   
+      click:function handler2(e){
+
+        console.log('test 2',e.target);
+        // e.stopPropagation();
+        vnode = patch(vnode,oldVnode);
       }
     }
   },"this is demo1"),
   h('div',{
     class:{
-      active: true
+      hello: true
     },
-  },"this is demo2")
-]);
+  },[
+    h('span',{
+      class:{
+        active: true
+      },
+    },'demo1'),
+    h('a',{
+      class:{
+        active: true
+      },
+    },'demo2')
+  ])
+],'This is demo!');
 
 window.addEventListener('DOMContentLoaded', () => {
   const app = document.getElementById('app');
   const container = document.createElement('div');
-  vnode = patch(container, newVnode);
+  vnode = patch(container, oldVnode);
+  console.log(vnode,1111);
   app.append(vnode.elm);
 });
 

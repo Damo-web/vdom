@@ -40,12 +40,14 @@ function createListener() {
 }
 
 function updateEventListeners(oldVnode, vnode) {
-  var oldOn = oldVnode.data.on,
+  let oldOn = oldVnode.data.on,
       oldListener = oldVnode.listener,
       oldElm = oldVnode.elm,
       on = vnode && vnode.data.on,
       elm = vnode && vnode.elm,
       name;
+
+  console.log(oldOn,on,'test event');
 
   // optimization for reused immutable handlers
   if (oldOn === on) {

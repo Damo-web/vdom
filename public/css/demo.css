@@ -10,3 +10,7 @@ h1 {
 .active{
   color: #3B8CFF;
 }
+
+.warn{
+  color: blueviolet;
+}
