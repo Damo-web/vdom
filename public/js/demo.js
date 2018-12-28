@@ -13,7 +13,6 @@ import h from "./vdom/creator";
 
 let vnode;
 
-let tmp = false;
 
 const patch = vdom.init([
   ClassModule,
@@ -48,7 +47,13 @@ let oldVnode = h('div',{
       vnode = patch(vnode,newVnode);
     }
   }
-},'This is demo!');
+},[
+  h('div',{
+    style:{
+      color: "red"
+    }
+  },"test")
+],'This is demo!');
 
 // let oldVnode = h('a',{
 //   on:{
@@ -94,7 +99,7 @@ let newVnode = h('div',{
       },
     },'demo2')
   ])
-],'This is demo!');
+]);
 
 window.addEventListener('DOMContentLoaded', () => {
   const app = document.getElementById('app');

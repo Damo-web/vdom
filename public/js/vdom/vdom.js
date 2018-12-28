@@ -321,7 +321,7 @@ function init(modules, api){
       } 
       //当oldStartVnode与newStartVnode属于同一节点
       //或者oldEndVnode与newEndVnode属于同一节点
-      //不进行DOM操作
+      //Vnode 往中间偏移
       else if (sameVnode(oldStartVnode, newStartVnode)) {
         patchVnode(oldStartVnode, newStartVnode, insertedVnodeQueue);
         oldStartVnode = oldCh[++oldStartIdx];
@@ -371,6 +371,7 @@ function init(modules, api){
           } else {
             //若selector相同,key也相同
             patchVnode(elmToMove, newStartVnode, insertedVnodeQueue);
+            //将当前 oldCh[idxInOld] 置空，等下次循环到这个下标的时候直接跳过
             oldCh[idxInOld] = undefined;
             api.insertBefore(parentElm, elmToMove.elm, oldStartVnode.elm);
           }
@@ -379,7 +380,7 @@ function init(modules, api){
       }
     }
 
-    //处理异常情况
+    //处理异常情况，oldCh或newCh还有待处理子项
     if (oldStartIdx <= oldEndIdx || newStartIdx <= newEndIdx) {
       if (oldStartIdx > oldEndIdx) {
         //追加newCh
@@ -400,8 +401,8 @@ function init(modules, api){
       cbs.pre[i]();
     }
 
-    //初始化时无oldVnode
-    //oldVnode即为空节点
+    //若oldVnode为 真实Element
+    //则转化oldVnode为空节点
     if(!isVnode(oldVnode)){
       oldVnode = emptyNodeAt(oldVnode);
     }
@@ -416,7 +417,6 @@ function init(modules, api){
       elm = oldVnode.elm;
       parent = api.parentNode(elm);
       createElm(vnode, insertedVnodeQueue);
-
 
       //倘若父级节点存在
       //在父级节点下旧节点后插入新节点
